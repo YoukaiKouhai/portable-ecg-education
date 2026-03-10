@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+
+<title>Portable ECG Teaching Monitor</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<h1>Portable ECG Teaching Monitor</h1>
+
+<button id="connectBtn">Connect Arduino</button>
+
+<h2>Lead II ECG</h2>
+
+<canvas id="ecgChart"></canvas>
+
+<h3 id="bpm">Heart Rate: -- BPM</h3>
+<h3 id="rhythm">Rhythm: --</h3>
+
+<h2>Filters</h2>
+
+<button onclick="setFilter('butterworth')">Butterworth</button>
+<button onclick="setFilter('chebyshev')">Chebyshev</button>
+<button onclick="setFilter('kalman')">Kalman</button>
+<button onclick="setFilter('adaptive')">Adaptive</button>
+
+<h2>Simulation</h2>
+
+<input type="file" id="fileInput">
+<button onclick="playSimulation()">Play</button>
+
+<script src="visualization.js"></script>
+<script src="filters.js"></script>
+<script src="heartRate.js"></script>
+<script src="ecg.js"></script>
+
+</body>
+</html>
