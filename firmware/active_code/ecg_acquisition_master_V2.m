@@ -4,8 +4,8 @@ clear; clc; close all;
 % USER SETTINGS
 %% ===============================
 
-use_live_acquisition = false;     % false = analyze existing RUN folders
-port = "COM6";
+use_live_acquisition = true;     % false = analyze existing RUN folders
+port = "COM5";
 baud = 115200;
 record_time = 20;
 
@@ -61,23 +61,99 @@ if use_live_acquisition
     s = serialport(port,baud);
     flush(s);
 
-    fprintf("Recording...\n");
+    fprintf("Recording with live ECG display...\n");
 
     data = [];
+
+    % ===== Create live ECG figure =====
+
+    figure('Name','Live ECG Monitor','Color','w',...
+        'Units','normalized','Position',[0.1 0.1 0.8 0.8])
+
+    tiledlayout(6,1)
+
+    ax(1)=nexttile; h(1)=animatedline('Color','k','LineWidth',1); title("Lead I")
+    ax(2)=nexttile; h(2)=animatedline('Color','k','LineWidth',1); title("Lead II")
+    ax(3)=nexttile; h(3)=animatedline('Color','k','LineWidth',1); title("Lead III")
+    ax(4)=nexttile; h(4)=animatedline('Color','k','LineWidth',1); title("aVR")
+    ax(5)=nexttile; h(5)=animatedline('Color','k','LineWidth',1); title("aVL")
+    ax(6)=nexttile; h(6)=animatedline('Color','k','LineWidth',1); title("aVF")
+
+    for i=1:6
+        grid(ax(i),'on')
+        hold(ax(i),'on')
+        ylabel(ax(i),'mV')
+    end
+
+    xlabel(ax(6),'Time (s)')
+
     start_time = tic;
+
+    Fs_est = 250; % estimated sampling rate
+
+    window = 2;
+
+    signal_buffer = [];
+    time_buffer = [];
+
+    k = 1;
 
     while toc(start_time) < record_time
 
         line = readline(s);
-        values = str2double(split(line,","));
+
+        values = str2double(split(line,",")); 
 
         if length(values)==2 && all(~isnan(values))
+
+            leadI_raw = values(1);
+            leadII_raw = values(2);
+
+            % store raw data
             data = [data; values'];
+
+            % convert ADC → mV
+            leadI = (leadI_raw/ADCmax)*Vref;
+            leadII = (leadII_raw/ADCmax)*Vref;
+
+            leadI = (leadI - 2.5)*1000;
+            leadII = (leadII - 2.5)*1000;
+
+            % derived leads
+            leadIII = leadII - leadI;
+            aVR = -(leadI + leadII)/2;
+            aVL = leadI - leadII/2;
+            aVF = leadII - leadI/2;
+
+            t_now = toc(start_time);
+
+            addpoints(h(1),t_now,leadI)
+            addpoints(h(2),t_now,leadII)
+            addpoints(h(3),t_now,leadIII)
+            addpoints(h(4),t_now,aVR)
+            addpoints(h(5),t_now,aVL)
+            addpoints(h(6),t_now,aVF)
+
+            signal_buffer = [signal_buffer; leadII];
+            time_buffer = [time_buffer; t_now];
+
+            drawnow limitrate
+
+            % scrolling window
+            if t_now > window
+                for i=1:6
+                    xlim(ax(i),[t_now-window t_now])
+                end
+            end
+
+            k = k + 1;
+
         end
 
     end
 
     clear s
+
     fprintf("Recording complete\n")
 
 else
@@ -521,16 +597,37 @@ aVF_f = ecgII - ecgI/2;
 % HEART RATE DETECTION
 %% ===============================
 
+Fs = 500;  % Arduino sample rate
 signal = ecgII - mean(ecgII);
 
-[peaks,locs] = findpeaks(signal,...
-    'MinPeakHeight',0.5*max(signal),...
-    'MinPeakDistance',round(0.4*Fs));
+% Bandpass QRS
+[b,a] = butter(2, [5 15]/(Fs/2), 'bandpass');
+ecg_filtered = filtfilt(b, a, signal);
 
-RR = diff(locs)/Fs;
-HR = 60/mean(RR);
+% Square to emphasize R
+ecg_squared = ecg_filtered.^2;
 
-fprintf("Estimated Heart Rate: %.1f BPM\n",HR)
+% Adaptive threshold
+threshold = mean(ecg_squared) + 1.5*std(ecg_squared);
+
+% Detect R-peaks
+[peaks, locs] = findpeaks(ecg_squared, ...
+    'MinPeakDistance', round(0.6*Fs), ...
+    'MinPeakHeight', threshold);
+
+% RR intervals and HR
+RR = diff(locs) / Fs;
+HR = 60 / mean(RR);
+
+fprintf('Detected %d R-peaks, Estimated Heart Rate: %.1f BPM\n', length(peaks), HR);
+
+% Optional: plot
+figure;
+plot(signal); hold on;
+plot(locs, signal(locs), 'ro');
+xlabel('Samples'); ylabel('Amplitude (mV)');
+title(sprintf('Lead II - R-peaks, HR = %.1f BPM', HR));
+grid on;
 
 %% ===============================
 % SAVE FILTERED CSV

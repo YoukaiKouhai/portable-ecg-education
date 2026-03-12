@@ -1,14 +1,22 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import find_peaks, butter, filtfilt
+import time
 
 plot_5_sec = False
-save_plot_5_sec = True
+save_plot_5_sec = False
+plot_5_sec_window = False 
+plot_live_view = False
+
 # ===============================
 #  CONFIGURATION
 # ===============================
 
-BASE_DIR = os.getcwd()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+print("Script directory:", BASE_DIR)
 
 FILTER_FILES = {
     "1": "raw_6lead.csv",
@@ -33,7 +41,10 @@ FILTER_NAMES = {
 #  FIND AVAILABLE RUNS
 # ===============================
 
-runs = sorted([f for f in os.listdir(BASE_DIR) if f.startswith("RUN_")])
+runs = sorted([
+    f for f in os.listdir(BASE_DIR)
+    if f.startswith("RUN_") and os.path.isdir(os.path.join(BASE_DIR, f))
+])
 
 if not runs:
     print("No RUN folders found.")
@@ -104,14 +115,23 @@ def plot_6lead(df, title):
         plt.plot(t, df.iloc[:, i+1], color=colors[i], linewidth=1.2)
         plt.title(lead_names[i])
         plt.ylabel("Amplitude")
-        plt.grid(True)
+        apply_ecg_grid(plt.gca())
+        if i == 1:  # Lead II used for HR detection
+            peaks, HR = detect_heart_rate(t, df.iloc[:, i+1])
+
+            plt.scatter(t.iloc[peaks], df.iloc[peaks, i+1],
+                        color="red", zorder=3)
+
+            plt.title(f"{lead_names[i]} | HR: {HR:.1f} BPM")
+        else:
+            plt.title(lead_names[i])
 
     plt.xlabel("Time (s)")
     plt.suptitle(title)
     plt.tight_layout()
     plt.show()
 
-def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_5_10=False, save_dir=None):
+def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_5_10=save_plot_5_sec, save_dir=None):
 
     t = df.iloc[:, 0]
     lead_names = df.columns[1:]
@@ -162,7 +182,7 @@ def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_5_10=False,
             filename = f"{title.replace(' ', '_')}_5_to_10_sec.png"
             save_path = os.path.join(save_dir, filename)
             plt.savefig(save_path)
-            print(f"Saved 5–10 sec plot to: {save_path}")
+            print(f"Saved 5 - 10 sec plot to: {save_path}")
 
         # ===== SHOW CONTROL =====
         if show_plot:
@@ -172,13 +192,11 @@ def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_5_10=False,
 
         start_time += window_sec
 
-# ... (Keep your existing imports and configuration)
-
 # ===============================
 #  UPDATED PLOTTING FUNCTION
 # ===============================
 
-def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_plots=True, save_dir=None):
+def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_plot_5_sec=False, save_dir=None):
     t = df.iloc[:, 0]
     lead_names = df.columns[1:]
     colors = ["blue", "red", "green", "purple", "orange", "brown"]
@@ -215,9 +233,9 @@ def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_plots=True,
 
         # ===== SAVE LOGIC FOR SPECIFIC WINDOWS =====
         # Checks if current window is 5-10, 10-15, or 15-20
-        target_windows = [1, 6, 12]
+        target_windows = [1, 5, 15]
         
-        if save_plots and (start_time in target_windows) and save_dir is not None:
+        if save_plot_5_sec and (start_time in target_windows) and save_dir is not None:
             filename = f"{title.replace(' ', '_')}_{int(start_time)}_to_{int(end_time)}_sec.png"
             save_path = os.path.join(save_dir, filename)
             plt.savefig(save_path)
@@ -231,19 +249,115 @@ def plot_6lead_windows(df, title, window_sec=5, show_plot=True, save_plots=True,
 
         start_time += window_sec
 
+def detect_heart_rate(t, signal):
 
+    t = np.array(t)
+    signal = np.array(signal)
+
+    # Sampling rate
+    fs = 500  # Hz
+    N = len(signal)
+    t = np.arange(N) / fs
+
+    # Remove DC
+    signal = signal - np.mean(signal)
+
+    # ---- QRS Bandpass Filter (5–15 Hz) ----
+    b, a = butter(2, [5/(fs/2), 15/(fs/2)], btype='band')
+    ecg = filtfilt(b, a, signal)
+
+    # ---- Square signal (emphasize R peaks) ----
+    ecg = ecg ** 2
+
+    # ---- Adaptive threshold ----
+    threshold = np.mean(ecg) + 1.5*np.std(ecg)
+
+    peaks, _ = find_peaks(
+        ecg,
+        height=threshold,
+        distance=int(0.6 * fs)   # prevents P/T detection
+    )
+
+    if len(peaks) < 2:
+        return peaks, 0
+
+    duration = t[-1] - t[0]
+    HR = len(peaks) * 60 / duration
+
+    return peaks, HR
+
+def apply_ecg_grid(ax):
+
+    # Major grid = 5 mm
+    ax.grid(which="major", color="#ff9999", linewidth=1)
+
+    # Minor grid = 1 mm
+    ax.grid(which="minor", color="#ffcccc", linewidth=0.5)
+
+    ax.minorticks_on()
+
+def compare_filters(run_path, selected_run):
+
+    plt.figure(figsize=(12,6))
+
+    for key in FILTER_FILES:
+
+        file_path = os.path.join(run_path, FILTER_FILES[key])
+
+        if not os.path.exists(file_path):
+            continue
+
+        df = pd.read_csv(file_path)
+
+        t = df.iloc[:,0]
+        leadII = df.iloc[:,2]
+
+        plt.plot(t, leadII, label=FILTER_NAMES[key], linewidth=1)
+
+    plt.legend()
+    plt.title(f"{selected_run} - Lead II Filter Comparison")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.grid(True)
+
+    plt.show()
+
+def realtime_viewer(df):
+
+    t = df.iloc[:,0]
+    signal = df.iloc[:,2]   # Lead II
+
+    window = 3
+    start = 0
+
+    plt.figure(figsize=(10,4))
+
+    while start < len(t):
+
+        plt.cla()
+
+        end = start + 200
+
+        plt.plot(t[start:end], signal[start:end], color="black")
+
+        plt.xlim(t[start], t[start] + window)
+
+        plt.title("Real-Time ECG Viewer")
+        plt.xlabel("Time (s)")
+        plt.ylabel("mV")
+
+        plt.grid(True)
+
+        plt.pause(0.02)
+
+        start += 5
 
 # ===============================
 #  LOAD + PLOT
 # ===============================
 
-# ===============================
-#  UPDATED LOAD + PLOT SECTION
-# ===============================
-
 # Set show_plot to True if you want to see them pop up, 
 # or False if you just want to save them to the folder.
-show_on_screen = True 
 
 if filter_choice.lower() == "a":
     for key in FILTER_FILES:
@@ -252,25 +366,41 @@ if filter_choice.lower() == "a":
             df = pd.read_csv(file_path)
             # Full plot
             plot_6lead(df, f"{selected_run} - {FILTER_NAMES[key]}")
+
             # Windowed plots (5-10, 10-15, 15-20)
             plot_6lead_windows(
                 df,
                 f"{selected_run} - {FILTER_NAMES[key]}",
                 window_sec=2,
-                show_plot=show_on_screen,
-                save_plots=True,
+                show_plot=plot_5_sec_window,
+                save_plot_5_sec=save_plot_5_sec,
                 save_dir=run_path
             )
+    compare_filters(run_path, selected_run)
 else:
-    # ... (Keep your existing single-filter logic, just update the function call)
+
+    if filter_choice not in FILTER_FILES:
+        print("Invalid filter selection.")
+        exit()
+
+    file_path = os.path.join(run_path, FILTER_FILES[filter_choice])
+
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        exit()
+
     df = pd.read_csv(file_path)
+
     plot_6lead(df, f"{selected_run} - {FILTER_NAMES[filter_choice]}")
+
     plot_6lead_windows(
         df,
         f"{selected_run} - {FILTER_NAMES[filter_choice]}",
         window_sec=5,
-        show_plot=show_on_screen,
-        save_plots=True,
+        show_plot=plot_5_sec_window,
+        save_plot_5_sec=save_plot_5_sec,
         save_dir=run_path
     )
 
+if plot_live_view:
+    realtime_viewer(df)
