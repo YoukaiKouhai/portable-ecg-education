@@ -5,6 +5,8 @@ clear; clc; close all;
 %% ===============================
 
 use_live_acquisition = true;     % false = analyze existing RUN folders
+simulate_live_view = true;   % enable playback when offline
+
 port = "COM5";
 baud = 115200;
 record_time = 20;
@@ -54,8 +56,6 @@ fprintf("Saving data to: %s\n",run_folder);
 % DATA ACQUISITION OR LOAD
 %% ===============================
 
-simulate_live_view = true;   % enable playback when offline
-
 if use_live_acquisition
 
     s = serialport(port,baud);
@@ -66,7 +66,6 @@ if use_live_acquisition
     data = [];
 
     % ===== Create live ECG figure =====
-
     figure('Name','Live ECG Monitor','Color','w',...
         'Units','normalized','Position',[0.1 0.1 0.8 0.8])
 
@@ -84,25 +83,23 @@ if use_live_acquisition
         hold(ax(i),'on')
         ylabel(ax(i),'mV')
     end
-
     xlabel(ax(6),'Time (s)')
 
     start_time = tic;
 
-    Fs_est = 250; % estimated sampling rate
+    % ===== Parameters =====
+    window = 2;              % scrolling window in seconds
+    update_interval = 0.1;   % seconds between plot updates
+    next_update = update_interval;
 
-    window = 2;
-
+    % Buffers
     signal_buffer = [];
     time_buffer = [];
-
-    k = 1;
 
     while toc(start_time) < record_time
 
         line = readline(s);
-
-        values = str2double(split(line,",")); 
+        values = str2double(split(line,","));
 
         if length(values)==2 && all(~isnan(values))
 
@@ -112,7 +109,7 @@ if use_live_acquisition
             % store raw data
             data = [data; values'];
 
-            % convert ADC → mV
+            % convert ADC → mV (centered around 0)
             leadI = (leadI_raw/ADCmax)*Vref;
             leadII = (leadII_raw/ADCmax)*Vref;
 
@@ -127,33 +124,31 @@ if use_live_acquisition
 
             t_now = toc(start_time);
 
-            addpoints(h(1),t_now,leadI)
-            addpoints(h(2),t_now,leadII)
-            addpoints(h(3),t_now,leadIII)
-            addpoints(h(4),t_now,aVR)
-            addpoints(h(5),t_now,aVL)
-            addpoints(h(6),t_now,aVF)
-
-            signal_buffer = [signal_buffer; leadII];
+            % store in buffer
+            signal_buffer = [signal_buffer; leadI leadII leadIII aVR aVL aVF];
             time_buffer = [time_buffer; t_now];
 
-            drawnow limitrate
-
-            % scrolling window
-            if t_now > window
-                for i=1:6
-                    xlim(ax(i),[t_now-window t_now])
+            % update plot only every update_interval
+            if t_now >= next_update
+                for i = 1:6
+                    addpoints(h(i), time_buffer, signal_buffer(:,i));
+                    % scrolling window
+                    if t_now > window
+                        xlim(ax(i), [t_now-window t_now]);
+                    end
                 end
+                drawnow limitrate;
+
+                % clear buffer
+                signal_buffer = [];
+                time_buffer = [];
+
+                next_update = t_now + update_interval;
             end
-
-            k = k + 1;
-
         end
-
     end
 
     clear s
-
     fprintf("Recording complete\n")
 
 else
