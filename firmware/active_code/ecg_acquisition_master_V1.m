@@ -4,7 +4,7 @@ clear; clc; close all;
 %  USER SETTINGS
 %% ===============================
 
-port = "COM6";              % Change to your Arduino port
+port = "COM3";              % Change to your Arduino port
 baud = 115200;
 record_time = 20;           % seconds to record
 
