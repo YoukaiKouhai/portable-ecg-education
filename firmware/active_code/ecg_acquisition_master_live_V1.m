@@ -5,7 +5,7 @@ clear; clc; close all;
 %% ===============================
 
 use_live_acquisition = true;     % false = analyze existing RUN folders
-simulate_live_view = true;   % enable playback when offline
+simulate_live_view = false;   % enable playback when offline
 
 port = "COM5";
 baud = 115200;
