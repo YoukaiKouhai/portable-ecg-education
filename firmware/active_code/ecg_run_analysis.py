@@ -32,12 +32,12 @@ FILTER_FILES = {
 }
 
 FILTER_NAMES = {
-    "1": "Raw Signal",
-    "2": "Bandpass Filter",
-    "3": "Butterworth Filter",
-    "4": "Chebyshev Notch Filter",
-    "5": "Kalman Filter",
-    "6": "Adaptive Filter"
+    "1": "Raw 6-Lead ECG (Unfiltered)",
+    "2": "6-Lead ECG - Bandpass Filter (0.5-40 Hz)",
+    "3": "6-Lead ECG - Butterworth Bandpass (0.5-40 Hz)",
+    "4": "6-Lead ECG - Chebyshev Notch Filter (50/60 Hz Removal)",
+    "5": "6-Lead ECG - Kalman Filter (Adaptive Noise Reduction)",
+    "6": "6-Lead ECG - Adaptive Filter"
 }
 
 
@@ -355,7 +355,7 @@ def detect_heart_rate(t, signal):
     time = np.arange(len(signal)) / fs
     
     try:
-        # QRS Bandpass Filter (5–15 Hz)
+        # QRS Bandpass Filter (5-15 Hz)
         nyquist = fs / 2
         if 5/nyquist >= 1 or 15/nyquist >= 1:
             print(f"Warning: Filter frequencies out of range (fs={fs}Hz)")
@@ -497,7 +497,8 @@ if filter_choice.lower() == "a":
             # Full plot
             plot_6lead(
                 df,
-                f"{selected_run} - {filter_name}",
+                #f"{selected_run} - {filter_name}",
+                f"{filter_name}",
                 save_dir=plots_dir if save_plots else None,
                 show=show_plot,
                 save=save_plots
