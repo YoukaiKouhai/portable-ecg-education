@@ -462,7 +462,7 @@ while (true) {
 
 ## Contributors
 
-**Group 07 — UCSD (2025-2026) Bioengineering Senior Design**
+**Group 07 — UCSD Bioengineering (2025-2026) Senior Design**
 
 | Name | Linkedin |
 |------|------|
