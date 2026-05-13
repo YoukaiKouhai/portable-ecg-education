@@ -5,9 +5,9 @@
 ![Hardware: Arduino](https://img.shields.io/badge/Hardware-Arduino-orange)
 ![UCSD Bioengineering](https://img.shields.io/badge/UCSD-Bioengineering-blue)
 
-A portable, low-cost electrocardiogram (ECG) system designed for educational outreach and biomedical engineering instruction. Built as a UCSD Bioengineering senior design project, the system allows students to safely observe, interact with, and interpret real-time cardiac electrical signals in classroom and outreach environments.
+A portable, low-cost electrocardiogram (ECG) system designed for educational outreach and biomedical engineering instruction. Built as a UCSD Bioengineering (2026 - 2027) senior design project, the system allows students to safely observe, interact with, and interpret real-time cardiac electrical signals in classroom and outreach environments.
 
-> **Special thanks** to Professor Pedro Cabrales and Iris Zaretzki for their guidance throughout this project.
+> **Special thanks** to Dr. Pedro Cabrales, Dr. Taylor Amos, and Iris Zaretzki for their guidance, mentorship, and support throughout this project.
 
 ---
 
@@ -24,9 +24,9 @@ A portable, low-cost electrocardiogram (ECG) system designed for educational out
     - [Design History](#design-history)
     - [Enclosure \& Safety Validation](#enclosure--safety-validation)
   - [Software Pipeline](#software-pipeline)
-    - [1. Arduino Firmware (`firmware/active_code/ECG_arduino_code/ECG_arduino_code.ino`)](#1-arduino-firmware-firmwareactive_codeecg_arduino_codeecg_arduino_codeino)
-    - [2. MATLAB Acquisition Script (`firmware/active_code/`)](#2-matlab-acquisition-script-firmwareactive_code)
-    - [3. Python Visualization (`firmware/active_code/` and beyond)](#3-python-visualization-firmwareactive_code-and-beyond)
+    - [1. Arduino Firmware (`firmware/active_code/arduino_firmware/ECG_arduino_code.ino`)](#1-arduino-firmware-firmwareactive_codearduino_firmwareecg_arduino_codeino)
+    - [2. MATLAB Acquisition Script (`firmware/active_code/matlab_acquisition/`)](#2-matlab-acquisition-script-firmwareactive_codematlab_acquisition)
+    - [3. Python Visualization (`firmware/active_code/python_visualization/` and beyond)](#3-python-visualization-firmwareactive_codepython_visualization-and-beyond)
     - [CSV Export Format](#csv-export-format)
   - [Signal Processing Methods](#signal-processing-methods)
     - [Bandpass Filter](#bandpass-filter)
@@ -156,7 +156,7 @@ The system integrates three computational layers:
 2. **Signal Processing** — MATLAB applies digital filtering (Butterworth, Kalman, Chebyshev, LMS)
 3. **Visualization** — Python renders waveforms for analysis and outreach demos
 
-### 1. Arduino Firmware (`firmware/active_code/ECG_arduino_code/ECG_arduino_code.ino`)
+### 1. Arduino Firmware (`firmware/active_code/arduino_firmware/ECG_arduino_code.ino`)
 
 The Arduino firmware performs real-time analog-to-digital conversion at ~500 Hz and streams raw data over serial:
 
@@ -172,9 +172,9 @@ Serial.println(analogRead(A1));
 - Baud rate: 115200
 - No on-device filtering — all processing handled downstream to avoid sampling jitter
 
-### 2. MATLAB Acquisition Script (`firmware/active_code/`)
+### 2. MATLAB Acquisition Script (`firmware/active_code/matlab_acquisition/`)
 
-MATLAB manages the recording session (`acquire_ecg.m`, `filter_ecg.m`):
+MATLAB manages the recording session (`ecg_acquisition_master_V1.m`, `ecg_acquisition_master_live_V1.m`, `ecg_acquisition_master_live_V2.m`):
 
 - Opens the serial connection to the Arduino
 - Preallocates a fixed-size acquisition buffer (avoids latency from dynamic resizing)
@@ -192,13 +192,13 @@ fs_effective = N / T
 
 where `N` = total sample count and `T` = recording duration.
 
-### 3. Python Visualization (`firmware/active_code/` and beyond)
+### 3. Python Visualization (`firmware/active_code/python_visualization/` and beyond)
 
-Python scripts visualize the six-lead ECG using vertically stacked subplots (`visualize_ecg.py`, `compare_filters.py`):
+Python scripts visualize the six-lead ECG using `ecg_run_analysis.py`:
 
 ```bash
 pip install numpy scipy matplotlib pandas
-python visualize_ecg.py
+python ecg_run_analysis.py
 ```
 
 Features:
@@ -303,14 +303,14 @@ Active firmware, scripts, and datasets are organized as follows:
 portable-ecg-education/
 ├── firmware/
 │   └── active_code/
-│       ├── ecg_acquisition_master_V1.m    # MATLAB main acquisition script
-│       ├── ecg_acquisition_master_V2.m    # MATLAB main acquisition script (v2)
-│       ├── ecg_run_analysis.py            # Python analysis and visualization
-│       ├── ECG_module_matlab_code/        # MATLAB filter implementations
-│       ├── visualize_ecg.py               # Six-lead ECG visualization
-│       ├── compare_filters.py             # Side-by-side filter comparison
-│       ├── ecg_acquisition.ino            # Arduino firmware for ADC sampling
-│       └── RUN_*/                         # Timestamped experimental runs
+│       ├── arduino_firmware/
+│       │   └── ECG_arduino_code.ino      # Arduino firmware for ADC sampling
+│       ├── matlab_acquisition/
+│       │   ├── ecg_acquisition_master_V1.m
+│       │   ├── ecg_acquisition_master_live_V1.m
+│       │   └── ecg_acquisition_master_live_V2.m
+│       └── python_visualization/
+│           └── ecg_run_analysis.py       # Python analysis and visualization
 ├── datasets/
 │   ├── RUN_001/ ... RUN_010_john/
 │   │   ├── raw_6lead.csv                 # Raw unfiltered ECG
@@ -374,7 +374,7 @@ Electrode placement follows the standard limb lead configuration:
 ### Step 1 — Upload Arduino Firmware
 
 ```bash
-# Open firmware/active_code/ecg_acquisition.ino in the Arduino IDE
+# Open firmware/active_code/arduino_firmware/ECG_arduino_code.ino in the Arduino IDE
 # Select the correct board (Arduino UNO/Nano) and COM port
 # Upload the sketch
 ```
@@ -382,7 +382,7 @@ Electrode placement follows the standard limb lead configuration:
 ### Step 2 — Run MATLAB Acquisition & Filtering
 
 ```matlab
-% In MATLAB, navigate to firmware/active_code/
+% In MATLAB, navigate to firmware/active_code/matlab_acquisition/
 run('ecg_acquisition_master_V2.m')
 % A 20-second recording will begin automatically
 % Applies Butterworth, Kalman, Chebyshev, and LMS filters
@@ -392,15 +392,11 @@ run('ecg_acquisition_master_V2.m')
 ### Step 3 — Visualize in Python
 
 ```bash
-cd firmware/active_code/
-python visualize_ecg.py --input ../../datasets/RUN_001/raw_6lead.csv
+cd firmware/active_code/python_visualization/
+python ecg_run_analysis.py --input ../../datasets/RUN_001/raw_6lead.csv
 ```
 
-To compare all filter outputs side by side:
-
-```bash
-python compare_filters.py --input ../../datasets/RUN_001/
-```
+To compare all filter outputs side by side, run the appropriate analysis script on the dataset folder or file path.
 
 This will display raw, Butterworth, Kalman, Chebyshev, and adaptive filtered versions for educational comparison.
 
