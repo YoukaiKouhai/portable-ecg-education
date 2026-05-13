@@ -312,7 +312,7 @@ portable-ecg-education/
 │       └── python_visualization/
 │           └── ecg_run_analysis.py       # Python analysis and visualization
 ├── datasets/
-│   ├── RUN_001/ ... RUN_010_john/
+│   ├── RUN_001/ ... RUN_010/
 │   │   ├── raw_6lead.csv                 # Raw unfiltered ECG
 │   │   ├── butterworth_filtered.csv      # Butterworth (4.1 dB SNR improvement)
 │   │   ├── kalman_filtered.csv           # Kalman (2.9 dB SNR in classroom)
