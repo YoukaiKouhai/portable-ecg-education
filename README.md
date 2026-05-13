@@ -5,9 +5,15 @@
 ![Hardware: Arduino](https://img.shields.io/badge/Hardware-Arduino-orange)
 ![UCSD Bioengineering](https://img.shields.io/badge/UCSD-Bioengineering-blue)
 
-A portable, low-cost electrocardiogram (ECG) system designed for educational outreach and biomedical engineering instruction. Built as a UCSD Bioengineering (2026 - 2027) senior design project, the system allows students to safely observe, interact with, and interpret real-time cardiac electrical signals in classroom and outreach environments.
+A portable, low-cost electrocardiogram (ECG) system designed for educational outreach and biomedical engineering instruction. Built as a UCSD Bioengineering (2025 - 2026) senior design project, the system allows students to safely observe, interact with, and interpret real-time cardiac electrical signals in classroom and outreach environments.
 
 > **Special thanks** to Dr. Pedro Cabrales, Dr. Taylor Amos, and Iris Zaretzki for their guidance, mentorship, and support throughout this project.
+
+---
+Visit our project website and reference documentation for full project details and outreach resources:
+
+- Website: [UCSD Portable ECG Project](https://sites.google.com/view/ucsd-project-7-portable-ecg)
+- References: [Project resources and documentation](https://sites.google.com/view/ucsd-project-7-portable-ecg/resources-documentation/reference)
 
 ---
 
@@ -456,16 +462,16 @@ while (true) {
 
 ## Contributors
 
-**Group 07 — UCSD Bioengineering Senior Design**
+**Group 07 — UCSD (2025-2026) Bioengineering Senior Design**
 
-| Name |
-|------|
-| Joe Borovoy |
-| John Gunay |
-| Marly Roufaeil |
-| Ali Testa |
-| Jaden Vanderpol |
-| Austin Wong |
+| Name | Linkedin |
+|------|------|
+| Joe Borovoy | https://www.linkedin.com/in/joseph-borovoy-2818a2261/ |
+| John Gunay | https://www.linkedin.com/in/john-gunay-1145932b9/ |
+| Marly Roufaeil | https://www.linkedin.com/in/marly-r-8ab772216/ |
+| Ali Testa | https://www.linkedin.com/in/aliana-testa-643548256/ |
+| Jaden Vanderpol | https://www.linkedin.com/in/jaden-vanderpol-159094283/ |
+| Austin Wong | https://www.linkedin.com/in/austinwong-bme/ |
 
 ---
 
