@@ -4,20 +4,34 @@ message: "If you use this project in research or teaching, please cite it using 
 type: software
 
 authors:
-  - ___
-  - ___
-  - ___
-  - ___
-  - ___
-  - ___
+  - Austin Wong
+  - Marly Roufaeil
+  - John Gunay
+  - Joe Borovoy
+  - Ali Testa
+  - Jaden Vanderpol
 
 repository-code: https://github.com/YoukaiKouhai/portable-ecg-education
 
 abstract: >
-  An open-source portable electrocardiogram (ECG) educational platform designed for
-  biomedical engineering instruction and outreach. The system demonstrates ECG
-  signal acquisition, filtering, lead reconstruction, and visualization using
-  Arduino, MATLAB, and Python.
+  Students commonly learn about cardiac physiology through static diagrams rather than 
+  by observing real physiological signals. Although clinical electrocardiogram (ECG) 
+  systems can measure the heart’s electrical activity, these devices are typically 
+  expensive, complex, and designed for medical environments rather than educational 
+  settings. This project addresses the need for a safe, portable, and affordable ECG 
+  demonstration device that enables students to interact with real time cardiac signals 
+  in classroom and outreach environments. The proposed system is a self contained handheld 
+  ECG demonstration tool built around the AD8232 analog front-end and an Arduino microcontroller 
+  with an integrated display. Surface electrodes capture the heart’s bioelectric signals, which 
+  are amplified and filtered before being processed and visualized as ECG waveforms. To improve 
+  signal clarity in noisy educational environments, the design incorporated both adaptive Kalman 
+  filtering for signal smoothing and Butterworth filtering for real time interference reduction, 
+  particularly from patient movement. Additionally, the device operates entirely on battery power 
+  and includes a built in self test mode to ensure reliable operation. Processed signals are 
+  exported for analysis and visualization using both Python and MatLab based tools. By combining 
+  safe hardware design with adaptive signal processing and clear waveform visualization, this 
+  project aims to create a portable educational electrocardiogram system that enhances student 
+  understanding of cardiac electrophysiology and biomedical instrumentation. 
 
 keywords:
   - ECG

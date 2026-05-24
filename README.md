@@ -14,6 +14,8 @@ Visit our project website and reference documentation for full project details a
 
 - Website: [UCSD Portable ECG Project](https://sites.google.com/view/ucsd-project-7-portable-ecg)
 - References: [Project resources and documentation](https://sites.google.com/view/ucsd-project-7-portable-ecg/resources-documentation/reference)
+- Active Code Guide: [firmware/active_code/README.md](firmware/active_code/README.md)
+- Future Direction Guide: [future_directions/README.md](future_directions/README.md)
 
 ---
 
@@ -54,6 +56,7 @@ Visit our project website and reference documentation for full project details a
   - [Educational Outreach](#educational-outreach)
   - [Future Development](#future-development)
     - [Regulatory \& Risk Considerations](#regulatory--risk-considerations)
+  - [Additional Documentation](#additional-documentation)
   - [Contributors](#contributors)
   - [License](#license)
 
@@ -457,6 +460,15 @@ while (true) {
   // Parse and render ECG samples in real time
 }
 ```
+
+---
+
+## Additional Documentation
+
+For more detailed setup and expansion notes, see:
+
+- [Active code README](firmware/active_code/PIPELINE_EXECUTION_GUIDE.md) for current firmware, MATLAB acquisition, and Python visualization workflow notes.
+- [Future directions README](future_directions/TRANSLATION_PLAN.md) for planned paths to reduce MATLAB dependency through Python, Java, or web app implementations.
 
 ---
 
