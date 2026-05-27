@@ -14,8 +14,8 @@ Visit our project website and reference documentation for full project details a
 
 - Website: [UCSD Portable ECG Project](https://sites.google.com/view/ucsd-project-7-portable-ecg)
 - References: [Project resources and documentation](https://sites.google.com/view/ucsd-project-7-portable-ecg/resources-documentation/reference)
-- Active Code Guide: [firmware/active_code/README.md](firmware/active_code/README.md)
-- Future Direction Guide: [future_directions/README.md](future_directions/README.md)
+- Active Code Guide: [firmware/active_code/PIPELINE_EXECUTION_GUIDE.md](firmware/active_code/PIPELINE_EXECUTION_GUIDE.md)
+- Future Direction Guide: [future_directions/TRANSLATION_PLAN.md](future_directions/TRANSLATION_PLAN.md)
 
 ---
 
