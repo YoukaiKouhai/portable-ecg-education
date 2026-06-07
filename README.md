@@ -24,12 +24,16 @@ Visit our project website and reference documentation for full project details a
 - [Portable ECG Educational Platform](#portable-ecg-educational-platform)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [System Overview](#system-overview)
   - [Project Goals](#project-goals)
   - [System Architecture](#system-architecture)
   - [Hardware Design](#hardware-design)
+    - [Hardware Prototype](#hardware-prototype)
     - [Components](#components)
+    - [Hardware Architecture](#hardware-architecture)
     - [Lead Configuration](#lead-configuration)
     - [Design History](#design-history)
+    - [Enclosure Design](#enclosure-design)
     - [Enclosure \& Safety Validation](#enclosure--safety-validation)
   - [Software Pipeline](#software-pipeline)
     - [1. Arduino Firmware (`firmware/active_code/arduino_firmware/ECG_arduino_code.ino`)](#1-arduino-firmware-firmwareactive_codearduino_firmwareecg_arduino_codeino)
@@ -42,7 +46,8 @@ Visit our project website and reference documentation for full project details a
     - [Chebyshev Notch Filter (60 Hz)](#chebyshev-notch-filter-60-hz)
     - [Kalman Filter *(Best in Controlled Tests)*](#kalman-filter-best-in-controlled-tests)
     - [Adaptive LMS Filter](#adaptive-lms-filter)
-  - [Filter Performance Results](#filter-performance-results)
+  - [Signal Processing Evaluation](#signal-processing-evaluation)
+  - [Results](#results)
     - [Controlled Environment (PhysioNet Database)](#controlled-environment-physionet-database)
     - [Real-World Classroom Environment](#real-world-classroom-environment)
   - [Repository Structure](#repository-structure)
@@ -53,6 +58,7 @@ Visit our project website and reference documentation for full project details a
     - [Step 1 — Upload Arduino Firmware](#step-1--upload-arduino-firmware)
     - [Step 2 — Run MATLAB Acquisition \& Filtering](#step-2--run-matlab-acquisition--filtering)
     - [Step 3 — Visualize in Python](#step-3--visualize-in-python)
+  - [Educational Outreach Framework](#educational-outreach-framework)
   - [Educational Outreach](#educational-outreach)
   - [Future Development](#future-development)
     - [Regulatory \& Risk Considerations](#regulatory--risk-considerations)
@@ -69,6 +75,16 @@ Clinical ECG systems typically cost between **$1,000 and $10,000**, are complex 
 The system captures surface bioelectric signals from two physical leads (Lead I and Lead II), applies digital signal processing and filtering, and mathematically reconstructs a full **six-lead ECG representation**. Processed signals can be visualized in real-time and exported for analysis using MATLAB and Python.
 
 The design evolved through multiple hardware iterations. An initial fully discrete analog ECG amplifier using instrumentation amplifiers (INA/op-amp topology) was developed first, but was replaced due to noise susceptibility and stability challenges. The current system uses two **AD8232 ECG front-end modules** in a modular, reliable architecture.
+
+---
+
+## System Overview
+
+![Portable ECG system pipeline](pictures/3_ECG_Pipeline.png)
+
+*Figure 1. End-to-end ECG acquisition, processing, export, and visualization pipeline.*
+
+This overview frames the project as a complete biomedical instrumentation workflow rather than a single circuit or script. The pipeline connects the clinical problem, the embedded acquisition hardware, the host-side signal processing, and the final educational visualization tools. It also shows why the system was built in layers: each stage can be tested independently while still supporting a complete real-time ECG demonstration.
 
 ---
 
@@ -110,6 +126,14 @@ This layered design isolates hardware timing constraints from computationally in
 
 ## Hardware Design
 
+### Hardware Prototype
+
+![Portable ECG hardware prototype](pictures/1_Prototype_Photo.png)
+
+*Figure 2. Physical prototype of the portable ECG educational platform.*
+
+The prototype demonstrates the transition from design requirements into a working, classroom-ready biomedical device. Showing the assembled system is important because the project had to satisfy more than signal acquisition alone: it also needed to be portable, understandable to students, and durable enough for repeated outreach handling. The physical implementation highlights the practical engineering tradeoffs between cost, accessibility, safety, and reproducibility.
+
 ### Components
 
 | Component | Purpose |
@@ -119,6 +143,14 @@ This layered design isolates hardware timing constraints from computationally in
 | Ag/AgCl Surface Electrodes | Biopotential signal capture from skin |
 | 3D-Printed Enclosure | Protects electronics during outreach demonstrations |
 | USB / Battery Power | Low-voltage, electrically isolated power supply |
+
+### Hardware Architecture
+
+![AD8232 ECG acquisition system](pictures/2_AD8232_System.png)
+
+*Figure 3. Dual-AD8232 acquisition architecture used to measure Lead I and Lead II.*
+
+The AD8232-based architecture replaced an earlier discrete amplifier design after testing showed that the module approach was more stable in non-laboratory environments. This figure is important because it shows the acquisition strategy behind the six-lead reconstruction: two physical channels are measured directly, then the remaining limb leads are derived in software. The modular hardware layout also makes the system easier to debug, replicate, and explain during demonstrations.
 
 ### Lead Configuration
 
@@ -140,6 +172,14 @@ A fully discrete ECG amplifier was designed using an AD620 instrumentation ampli
 
 **Iteration 2 — AD8232 Module Architecture (Current):**  
 The AD8232 integrates a complete instrumentation amplifier, filtering, and lead-off detection into a single chip. Two modules acquire Lead I and Lead II simultaneously. This modular approach significantly improves signal stability, reduces setup time, and is more reproducible for educational use.
+
+### Enclosure Design
+
+![Portable ECG enclosure render](pictures/6_Enclosure_Render.png)
+
+*Figure 4. Protective enclosure concept for the ECG electronics and user-facing connectors.*
+
+The enclosure design translates the electronics into a safer and more approachable teaching tool. For an outreach device, the mechanical package is part of the biomedical engineering solution because it reduces exposed wiring, supports consistent electrode setup, and improves handling during live demonstrations. This figure documents how usability and risk reduction were considered alongside the electrical and software design.
 
 ### Enclosure & Safety Validation
 
@@ -271,7 +311,23 @@ The following filtering methods are implemented and compared:
 
 ---
 
-## Filter Performance Results
+## Signal Processing Evaluation
+
+![ECG filter comparison](pictures/4_Filter_Comparison.png)
+
+*Figure 5. Comparison of candidate filtering methods used to clean ECG recordings.*
+
+This comparison is important because ECG signals are low-amplitude and highly sensitive to motion artifacts, baseline drift, and powerline interference. Evaluating multiple filters made it possible to distinguish between algorithms that perform well in controlled analysis and algorithms that remain reliable during outreach demonstrations. The figure supports the engineering decision to prioritize robust, interpretable filtering behavior over purely theoretical performance.
+
+---
+
+## Results
+
+![Raw and filtered ECG waveform comparison](pictures/5_Raw_vs_Filtered_ECG.png)
+
+*Figure 6. Raw ECG waveform compared against filtered ECG output.*
+
+The raw-versus-filtered comparison shows the practical outcome of the signal-processing pipeline: noisy ADC measurements are transformed into waveforms that students can interpret visually. This figure is important because it connects the quantitative filtering results to the educational goal of making P waves, QRS complexes, and T waves easier to recognize. It also demonstrates why preserving waveform morphology is as important as reducing noise.
 
 ### Controlled Environment (PhysioNet Database)
 
@@ -408,6 +464,16 @@ python ecg_run_analysis.py --input ../../datasets/RUN_001/raw_6lead.csv
 To compare all filter outputs side by side, run the appropriate analysis script on the dataset folder or file path.
 
 This will display raw, Butterworth, Kalman, Chebyshev, and adaptive filtered versions for educational comparison.
+
+---
+
+## Educational Outreach Framework
+
+![Educational outreach workflow](pictures/7_Outreach_Workflow.png)
+
+*Figure 7. Outreach workflow connecting device setup, live ECG visualization, and student learning activities.*
+
+The outreach workflow shows how the engineering platform was translated into a structured learning experience. This figure is important because the project was designed for education, so success depends on setup clarity, participant safety, interactive visualization, and reflection activities. It also communicates how the hardware and software components support a repeatable classroom demonstration rather than a one-time prototype.
 
 ---
 
